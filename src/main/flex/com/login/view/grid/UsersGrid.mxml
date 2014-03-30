@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.login.view.*"
+         xmlns:form="com.login.view.form.*">
+		
+	<fx:Script>
+		<![CDATA[			
+            import com.login.entity.UserEntity;
+            import com.login.event.UserEvent;
+            import com.login.view.form.UserForm;
+            
+            import mx.collections.ArrayCollection;
+            import mx.controls.dataGridClasses.DataGridColumn;
+			
+			[Bindable]
+			[Inject( source="securityController.authenticatedUser", bind="true" )]
+			public var authenticatedUser:UserEntity;
+			
+			[Bindable]
+			[Inject( source="userController.users", bind="true" )]
+			public var users:ArrayCollection;
+			
+            [PostConstruct]
+            public function postConstruct() : void {
+                //Alert.show("UsersGrid - postConstruct");
+                dispatchEvent(new UserEvent( UserEvent.LIST_REQUESTED ));
+            }
+            
+            protected function selectUser(event:MouseEvent):void
+            {
+                var selectedUser:UserEntity = usersDataGrid.selectedItem as UserEntity;
+                
+                if (selectedUser == null) {
+                    selectedUser = new UserEntity;
+                }
+                
+                dispatchEvent(new UserEvent(UserEvent.SELECT_REQUESTED, selectedUser));
+            }
+
+		]]>
+	</fx:Script>
+		
+	<mx:DataGrid id="usersDataGrid" dataProvider="{users}" width="500" height="300" verticalScrollPolicy="on" horizontalScrollPolicy="off" click="selectUser(event)" >
+		<mx:columns>
+			<mx:DataGridColumn id="usernameColumn" dataField="username" headerText="Username" />
+			<mx:DataGridColumn id="passwordColumn" dataField="password" headerText="Password" visible="{authenticatedUser.isAdmin()}"/>
+		</mx:columns>
+	</mx:DataGrid>
+    
+    <form:UserForm visible="{authenticatedUser.isAdmin()}" />
+	
+</s:HGroup>

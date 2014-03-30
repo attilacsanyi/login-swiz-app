@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 title="User Form">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.login.entity.AuthorityEntity;
+			import com.login.event.AuthorityEvent;
+			
+			import mx.controls.Alert;
+			
+			[Bindable]
+			[Inject( source="authorityController.currentAuthority", bind="true", twoWay="true" )]
+			public var currentAuthority : AuthorityEntity;
+			
+			private function createAuthority() : void
+			{
+				var newAuthority:AuthorityEntity = new AuthorityEntity;
+				
+				newAuthority.name = authName.text;
+				newAuthority.description = authDesc.text;
+								
+				var event : AuthorityEvent = new AuthorityEvent( AuthorityEvent.CREATE_REQUESTED );
+				event.authority = newAuthority;
+				dispatchEvent( event );
+			}
+			
+			private function updateAuthority() : void
+			{	
+				currentAuthority.name = authName.text;
+				currentAuthority.description = authDesc.text;
+				
+				var event : AuthorityEvent = new AuthorityEvent( AuthorityEvent.UPDATE_REQUESTED );
+				event.authority = currentAuthority;
+				dispatchEvent( event );
+			}
+			
+			private function removeAuthority() : void
+			{				
+				var event : AuthorityEvent = new AuthorityEvent( AuthorityEvent.REMOVE_REQUESTED );
+				event.authority = currentAuthority;
+				dispatchEvent( event );
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:Form>
+		
+		<mx:FormItem id="authNameForm" label="Name">
+			<s:TextInput id="authName" text="{currentAuthority.name}" />
+		</mx:FormItem>
+		
+		<mx:FormItem id="authDescForm" label="Description">
+			<s:TextInput id="authDesc" text="{currentAuthority.description}" />
+		</mx:FormItem>
+		
+	</mx:Form>
+	
+	<s:controlBarContent>
+		<mx:Spacer width="100%" />
+		<s:Button id="updateButton" label="Update" click="updateAuthority()" visible="{currentAuthority.id == -1 ? false : true}" />
+		<s:Button id="removeButton" label="Remove" click="removeAuthority()" visible="{currentAuthority.id == -1 ? false : true}" />
+		<s:Button id="saveButton" label="Save as new" click="createAuthority()" />
+	</s:controlBarContent>
+	
+</s:Panel>

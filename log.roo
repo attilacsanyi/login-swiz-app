@@ -1,0 +1,24 @@
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2010-12-29 15:41:59
+project --topLevelPackage com.login --projectName login --java 6
+persistence setup --provider HIBERNATE --database MYSQL --databaseName base --userName atka --password atka
+entity --class ~.entity.AuthorityEntity --table authority
+field string --fieldName name --notNull --sizeMin 4 --column name --comment "Name of the role."
+field string --fieldName description --notNull --column description --comment "Description of the role"
+entity --class ~.entity.UserEntity --table user
+field set --fieldName authorities --element ~.entity.AuthorityEntity --cardinality ONE_TO_MANY --fetch EAGER --comment "The user authorities."
+field string --fieldName password --notNull --sizeMin 2 --column password --comment "Returns the password used to authenticate the user."
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username --comment "Returns the username used to authenticate the user."
+field boolean --fieldName accountNonExpired --notNull --column account_non_expired --comment "Indicates whether the user's account has expired. An expired account cannot be authenticated."
+field boolean --fieldName accountNonLocked --notNull --column account_non_locked --comment "Indicates whether the user is locked or unlocked. A locked user cannot be authenticated."
+field boolean --fieldName credentialsNonExpired --notNull --column credentials_non_expired --comment "Indicates whether the user's credentials (password) has expired. Expired credentials prevent authentication."
+field boolean --fieldName enabled --notNull --column enabled --comment "Indicates whether the user is enabled or disabled. A disabled user cannot be authenticated."
+flex setup
+flex remoting scaffold --name ~.service.AuthorityService --entity ~.entity.AuthorityEntity
+flex remoting scaffold --name ~.service.UserService --entity ~.entity.UserEntity
+security setup
+perform eclipse
+quit
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2010-12-29 15:42:49
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log opened at 2010-12-29 15:42:49
+// script --file create_login.roo
+// Spring Roo 1.1.0.M1 [rev 3a0b8a3] log closed at 2010-12-29 15:42:49

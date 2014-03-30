@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:view="com.login.view.*"
+		 xmlns:form="com.login.view.form.*">
+	
+	<fx:Metadata>
+		[Event(name="select", type="com.login.event.AuthorityEvent")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[			
+            import com.login.entity.AuthorityEntity;
+            import com.login.entity.UserEntity;
+            import com.login.event.AuthorityEvent;
+            import com.login.view.form.AuthoritiesForm;
+            
+            import mx.collections.ArrayCollection;
+            import mx.controls.dataGridClasses.DataGridColumn;
+			
+			[Bindable]
+			[Inject( source="securityController.authenticatedUser", bind="true" )]
+			public var authenticatedUser:UserEntity;
+			
+			[Bindable]
+			[Inject( source="authorityController.authorities", bind="true" )]
+			public var authorities:ArrayCollection;
+			
+            [PostConstruct]
+			public function postConstruct():void {
+                dispatchEvent(new AuthorityEvent( AuthorityEvent.LIST_REQUESTED ));
+ 			}
+						
+			protected function selectAuthority(event:MouseEvent):void
+			{
+				var selectedAuthority:AuthorityEntity = authoritiesDataGrid.selectedItem as AuthorityEntity;
+				
+				if (selectedAuthority == null) {
+					selectedAuthority = new AuthorityEntity;
+				}
+				
+                dispatchEvent(new AuthorityEvent(AuthorityEvent.SELECT_REQUESTED, selectedAuthority));
+			}
+
+		]]>
+	</fx:Script>
+		
+	<mx:DataGrid id="authoritiesDataGrid" dataProvider="{authorities}" width="500" height="300" verticalScrollPolicy="on" horizontalScrollPolicy="off" click="selectAuthority(event)">
+		<mx:columns>
+			<mx:DataGridColumn id="nameColumn" dataField="name" headerText="Name" visible="{authenticatedUser.isAdmin()}"/>
+			<mx:DataGridColumn id="descriptionColumn" dataField="description" headerText="Description"/>
+		</mx:columns>
+	</mx:DataGrid>
+    
+    <form:AuthoritiesForm visible="{authenticatedUser.isAdmin()}" />
+	
+</s:HGroup>

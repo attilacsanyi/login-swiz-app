@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600"
+			   xmlns:i10n="com.login.i10n.*"
+			   xmlns:view="com.login.view.*"
+			   xmlns:config="com.login.config.*"
+			   xmlns:swiz="http://swiz.swizframework.org"
+			   creationComplete="creationComplete()" xmlns:grid="com.login.view.grid.*">
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center"/>
+	</s:layout>
+	
+	<s:states>
+		<s:State name="default"/>
+		<s:State name="loggedin"/>
+	</s:states>
+	
+	<!-- Define the transition to animate the change of view state. --> 
+	<s:transitions> 
+		<s:Transition toState="default"> 
+			<s:Parallel> 
+				<mx:Resize target="{loginPanel}" duration="100"/> 
+				<s:Wipe direction="right" target="{usrForm}"/> 
+				<s:Wipe direction="left" target="{passwForm}"/>
+			</s:Parallel> 
+		</s:Transition> 
+		<s:Transition toState="loggedin"> 
+			<s:Sequence> 
+				<mx:Resize target="{loginPanel}" duration="100"/> 
+			</s:Sequence> 
+		</s:Transition> 
+	</s:transitions> 
+
+		
+	<fx:Declarations>
+		
+		<swiz:Swiz>
+			
+			<!-- BeanProviders simply contain the non-display objects that Swiz should process. -->
+			<swiz:beanProviders>
+				<config:Beans />
+			</swiz:beanProviders>
+			
+			<swiz:loggingTargets>
+				<swiz:SwizTraceTarget id="myTraceTarget" />
+			</swiz:loggingTargets>
+			
+			<swiz:config>
+				<!-- The eventPackages value tells Swiz the path to your Event classes,
+				and viewPackages is an optional value that speeds up the processing of display classes. -->
+				<swiz:SwizConfig
+					setUpEventType="{ Event.ADDED_TO_STAGE }"
+					setUpEventPhase="{ EventPhase.CAPTURING_PHASE } "
+					setUpEventPriority="50"
+					tearDownEventType="{ Event.REMOVED_FROM_STAGE }"
+					tearDownEventPhase="{ EventPhase.CAPTURING_PHASE }"
+					tearDownEventPriority="50"
+					viewPackages="com.login.view.*"
+					eventPackages="com.login.event.*"
+					defaultFaultHandler="handleUnhandledFaults"
+					defaultDispatcher="global" />
+			</swiz:config>
+			
+		</swiz:Swiz>
+
+		<i10n:LocalizationMap id="i10nMap"/>
+        
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+            import com.login.entity.UserEntity;
+            import com.login.event.SecurityEvent;
+            
+            import mx.controls.Alert;
+            import mx.events.StateChangeEvent;
+            import mx.rpc.events.FaultEvent;
+			
+            private var _counter : int = 0;
+            
+			[Bindable]
+            [Inject( source="securityController.authenticatedUser", bind="true" )]
+			public var authenticatedUser:UserEntity;
+									
+			private function creationComplete():void {
+                /*var userEvent : UserEvent = new UserEvent( UserEvent.SHOW_BY_USERNAME_REQUESTED );
+                userEvent.username = "atka";
+                dispatchEvent( userEvent );*/
+                //logout();
+                addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, onStateChange);
+                
+                dispatchEvent(new SecurityEvent( SecurityEvent.AUTHENTICATE_REQUESTED ));
+			}
+		    
+            private function handleUnhandledFaults(event:FaultEvent):void
+            {
+                Alert.show( event.fault.message, "SWIZ Unexpected Error" );
+            }
+            
+            private function onStateChange(event:StateChangeEvent):void {
+                currentState = event.newState;
+            }
+			
+			private function login():void
+			{
+                dispatchEvent(new SecurityEvent( SecurityEvent.LOGIN_REQUESTED, userId.text, password.text ));
+			}
+			
+			private function logout():void
+			{
+                dispatchEvent( new SecurityEvent( SecurityEvent.LOGOUT_REQUESTED ));
+			}		
+			
+			private function changeLanguage():void{
+				i10nMap.changeLocale(++_counter);
+				//Alert.show("Changed to "+resourceManager.localeChain[0]);
+			}
+		]]>
+	</fx:Script>
+		
+	<s:Panel id="loginPanel" title="Login panel" title.loggedin="Manage Users" >
+		<mx:Form excludeFrom="loggedin">
+			<mx:FormItem id="usrForm" label="User Id">
+				<s:TextInput id="userId"/>
+			</mx:FormItem>
+			<mx:FormItem id="passwForm" label="Password">
+				<s:TextInput id="password" displayAsPassword="true"/>
+			</mx:FormItem>
+		</mx:Form>
+		
+		<mx:Accordion includeIn="loggedin">
+			<s:NavigatorContent label="Users">
+				<grid:UsersGrid id="usersGrid" />
+			</s:NavigatorContent>
+			<s:NavigatorContent label="Authorities">
+				<grid:AuthoritiesGrid id="authoritiesGrid" />
+			</s:NavigatorContent>
+		</mx:Accordion>
+		
+		<s:controlBarContent>
+			<s:Label includeIn="loggedin" text="{authenticatedUser.username}, you successfully logged in!" visible="{authenticatedUser.isAdmin() ? true : false}" />
+			<s:Button id="loginButton" label="Login" click="login()" excludeFrom="loggedin"/>
+			<mx:Spacer width="100%" includeIn="loggedin"/>
+			<s:Button id="logoutButton" label="Logout" click="logout()" includeIn="loggedin"/>
+			<mx:Spacer width="100%" excludeFrom="loggedin"/>
+			<s:Button id="langButton" label="Change language" click="changeLanguage()" />
+		</s:controlBarContent>
+		
+	</s:Panel>
+	
+</s:Application>

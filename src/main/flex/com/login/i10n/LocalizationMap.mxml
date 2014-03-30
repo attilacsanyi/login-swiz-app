@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LocaleMap  enableLog="true" 
+				localeChanging="onUpdateAlert();"
+				xmlns="library://ns.babelfx.org/l10n/flex/"  
+				xmlns:mx="http://www.adobe.com/2006/mxml" >
+	
+	<mx:Metadata>
+		[ResourceBundle("resources")]
+	</mx:Metadata>
+				
+	<mx:Script>
+		<![CDATA[
+			import com.login.view.form.AuthoritiesForm;
+			import com.login.view.form.UserForm;
+			import com.login.view.grid.UsersGrid;
+			import com.login.view.grid.AuthoritiesGrid;
+			import com.mindspace.l10n.events.LocaleEvent;
+			
+			import mx.controls.Alert;
+			import mx.resources.ResourceManager;
+						
+			/**
+			 *  Normally this functionality is in a custom UI component like 
+			 *  a LanguageBar or LanguageSelector
+			 */
+			public function changeLocale(index:int):void {
+				var lang : String = ((index % 2) == 1) ? "hu_HU" : "en_US"
+				// Normally this is done in a LanguageBar type of UI control
+				// Must use "owner" to bubble events properly...
+				dispatchEvent(new LocaleEvent(LocaleEvent.LOAD_LOCALE,lang));
+			}
+			
+			
+			/**
+			 * Special method needed because injection does not work on static functions or 
+			 * static variables.
+			 * e.g. 
+			 * 
+			 * class Alert { 
+			 * 	static public function set yesLabel(val:String):void { ... }
+			 * } 
+			 * 
+			 * We must manually inject to such targets. Listening for localeChanged allows
+			 * use to do this easily.
+			 */
+			private function onUpdateAlert():void {
+				Alert.yesLabel = ResourceManager.getInstance().getString("resources","Alert.Yes");
+				Alert.noLabel  = ResourceManager.getInstance().getString("resources","Alert.No");
+				Alert.okLabel  = ResourceManager.getInstance().getString("resources","Alert.Ok");
+			} 
+		]]>
+	</mx:Script>
+							
+	<!-- 
+		The command factory instance below allows the l10nInjection engine to load external resource bundles from
+	     a custom deploy directory 'assets/locales/' name encoded by locale code
+	     e.g.  en_US.swf, zh_CN.swf, etc.
+	
+	<commandFactory>
+		 <factory:ClassFactory generator="{ExternalLocaleCommand}">
+			 <factory:properties>
+				 <mx:Object externalPath="pod_\{0\}.swf""/>
+			 </factory:properties>
+		 </factory:ClassFactory>
+	</commandFactory>
+	-->
+
+	<SmartResourceInjector target="{Login}" bundleName="resources">
+		<ResourceProxy property="loginButton.label" 					key="loginForm.login.button" />
+		<ResourceProxy property="logoutButton.label" 					key="loginForm.logout.button" />
+		<ResourceProxy property="langButton.label" 						key="loginForm.lang.button" />
+		<ResourceProxy property="loginPanel.title" 						key="loginPanel.title.default" state="default"/>
+		<ResourceProxy property="loginPanel.title"						key="loginPanel.title.loggedin" state="loggedin"/>
+		<ResourceProxy property="usrForm.label" 						key="userForm.usernameForm.label" />
+		<ResourceProxy property="passwForm.label" 						key="userForm.passwordForm.label" />
+	</SmartResourceInjector>
+	
+	<SmartResourceInjector target="{UserForm}" bundleName="resources">
+		<ResourceProxy property="title" 								key="userForm.title" />
+		<ResourceProxy property="userIdForm.label" 						key="userForm.userIdForm.label" />
+		<ResourceProxy property="usernameForm.label" 					key="userForm.usernameForm.label" />
+		<ResourceProxy property="passwordForm.label" 					key="userForm.passwordForm.label" />
+		<ResourceProxy property="firstnameForm.label" 					key="userForm.firstnameForm.label" />
+		<ResourceProxy property="lastnameForm.label" 					key="userForm.lastnameForm.label" />
+		<ResourceProxy property="ageForm.label" 						key="userForm.ageForm.label" />
+		<ResourceProxy property="isAccountNonExpiredForm.label"			key="userForm.isAccountNonExpiredForm.label" />
+		<ResourceProxy property="isAccountNonLockedForm.label"			key="userForm.isAccountNonLockedForm.label" />
+		<ResourceProxy property="isCredentialsNonExpiredForm.label"		key="userForm.isCredentialsNonExpiredForm.label" />
+		<ResourceProxy property="isEnabledForm.label" 					key="userForm.isEnabledForm.label" />
+		<ResourceProxy property="roleForm.label" 					    key="userForm.roleForm.label" />
+        <ResourceProxy property="saveButton.label" 						key="userForm.save.button" />
+        <ResourceProxy property="updateButton.label" 					key="userForm.update.button" />
+        <ResourceProxy property="removeButton.label" 					key="userForm.remove.button" />
+	</SmartResourceInjector>
+	
+	<SmartResourceInjector target="{UsersGrid}" bundleName="resources">
+		<ResourceProxy property="usernameColumn.headerText" 			key="manageUsers.username.header" />
+		<ResourceProxy property="passwordColumn.headerText" 			key="manageUsers.password.header" />
+	</SmartResourceInjector>
+	
+	<SmartResourceInjector target="{AuthoritiesForm}" bundleName="resources">
+		<ResourceProxy property="title" 								key="authoritiesForm.title" />
+		<ResourceProxy property="authNameForm.label" 					key="authoritiesForm.authNameForm.label" />
+		<ResourceProxy property="authDescForm.label" 					key="authoritiesForm.authDescForm.label" />
+		<ResourceProxy property="saveButton.label" 						key="authoritiesForm.save.button" />
+		<ResourceProxy property="updateButton.label" 					key="authoritiesForm.update.button" />
+		<ResourceProxy property="removeButton.label" 					key="authoritiesForm.remove.button" />
+	</SmartResourceInjector>
+	
+	<SmartResourceInjector target="{AuthoritiesGrid}" bundleName="resources">
+		<ResourceProxy property="nameColumn.headerText" 				key="manageAuthorities.name.header" />
+		<ResourceProxy property="descriptionColumn.headerText" 			key="manageAuthorities.description.header" />
+	</SmartResourceInjector>
+  	
+</LocaleMap>

@@ -1,0 +1,150 @@
+// Create login project
+project --topLevelPackage com.login --projectName login --java 6
+
+// Create Hibernate database configuration with MySQL dialect
+persistence setup --provider HIBERNATE --database MYSQL --databaseName base --userName atka --password atka
+
+// Create authority entity to store the roles and implements springframework.GrantedAuthority interface
+entity --class ~.entity.AuthorityEntity --table authority
+field string --fieldName name --notNull --sizeMin 4 --column name --comment "Name of the role."
+field string --fieldName description --notNull --column description --comment "Description of the role"
+
+// Create user entity for storing users and implements springframework.UserDetails interface
+entity --class ~.entity.UserEntity --table user
+field set --fieldName authorities --element ~.entity.AuthorityEntity --cardinality ONE_TO_MANY --fetch EAGER --comment "The user authorities."
+field string --fieldName password --notNull --sizeMin 2 --column password --comment "Returns the password used to authenticate the user."
+field string --fieldName username --notNull --sizeMin 2 --sizeMax 20 --column username --comment "Returns the username used to authenticate the user."
+field boolean --fieldName accountNonExpired --notNull --column account_non_expired --comment "Indicates whether the user's account has expired. An expired account cannot be authenticated."
+field boolean --fieldName accountNonLocked --notNull --column account_non_locked --comment "Indicates whether the user is locked or unlocked. A locked user cannot be authenticated."
+field boolean --fieldName credentialsNonExpired --notNull --column credentials_non_expired --comment "Indicates whether the user's credentials (password) has expired. Expired credentials prevent authentication."
+field boolean --fieldName enabled --notNull --column enabled --comment "Indicates whether the user is enabled or disabled. A disabled user cannot be authenticated."
+
+flex setup
+flex remoting scaffold --name ~.service.AuthorityService --entity ~.entity.AuthorityEntity
+flex remoting scaffold --name ~.service.UserService --entity ~.entity.UserEntity
+
+security setup
+perform eclipse
+quit
+
+/*
+------------------------------------------------------------------------------------------------------------------------------------------
+-- DATABASE CONFIGURATION
+------------------------------------------------------------------------------------------------------------------------------------------
+- Start MySQL database
+	- Create user privilliges with user:atka pass:atka
+	- Create new base database with required collation
+
+- Import as an existing eclipse project
+
+- Change the persistence.xml
+	- <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLInnoDBDialect"/>
+	
+- Add the following lines to web.xml
+	<listener>
+		<listener-class>flex.messaging.HttpFlexSession</listener-class>
+	</listener>
+
+- Add different default serial version UID for each entity
+	
+- Start webcontainer and run webapplication
+
+------------------------------------------------------------------------------------------------------------------------------------------
+-- SECURITY CONFIGURATION
+------------------------------------------------------------------------------------------------------------------------------------------
+
+- The RoleEntity has to implement org.springframework.security.core.GrantedAuthority; interface
+	- Add the following method:
+
+		@Override
+		public String getAuthority() {
+			return name;
+		}
+
+- The LoginEntity has to implement the org.springframework.security.core.userdetails.UserDetails interface
+	- Add the following methods:
+
+		@Override
+		public Collection<GrantedAuthority> getAuthorities() {
+			
+			Collection<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+			
+			for(RoleEntity role : roles) {
+				authorities.add(new GrantedAuthorityImpl(role.getName()));
+			}
+			
+			return authorities;
+		}
+
+		@Override
+		public boolean isAccountNonExpired() {
+			return accountNonExpired;
+		}
+
+		@Override
+		public boolean isAccountNonLocked() {
+			return accountNonLocked;
+		}
+
+		@Override
+		public boolean isCredentialsNonExpired() {
+			return credentialsNonExpired;
+		}
+
+		@Override
+		public boolean isEnabled() {
+			return enabled;
+		}
+		
+- The LoginEntityService has to implement the org.springframework.security.core.userdetails.UserDetailsService interface
+	- Add the following method:
+		@Override
+		public LoginEntity loadUserByUsername(String username)
+				throws UsernameNotFoundException, DataAccessException {
+			
+			LoginEntity login = show(1L);
+			
+			if (login == null) {
+
+				login = new LoginEntity();
+				login.setAccountNonExpired(true);
+				login.setAccountNonLocked(true);
+				login.setCredentialsNonExpired(true);
+				login.setEnabled(true);
+				login.setPassword("atka");
+				login.setUsername("atka");
+				
+				RoleEntity role = new RoleEntity();
+				role.setName("ADMIN_ROLE");
+				role.setDescription("Admin role");
+				
+				Set<RoleEntity> roles = new HashSet<RoleEntity>();
+				roles.add(role);
+				
+				login.setRoles(roles);
+				create(login);
+			}
+
+			return login;
+		}
+
+- Modify flex-config.xml the following way
+	- Create new SecurityHelper class in the org.flex.helper package with @RemoteDestination annotation and the following method:
+	
+		public Map<String, Object> getAuthentication() {
+			return AuthenticationResultUtils.getAuthenticationResult();
+		}
+		
+- Add the following bean definition into the applicationContext-security.xml configuration file
+	- <beans:bean id="securityHelper" class="org.flex.base.helper.SecurityHelper" />
+	- Comment the authentication-provider tag body and add loginEntityService as a new user-service-ref attribute
+	
+- Add <flex:secured/> between the flex:messagebroker tag
+	
+- Change persistence.xml <property name="hibernate.hbm2ddl.auto" value="update"/>
+	
+- Create your own login.mxml component
+	
+- Restart webcontainer and rerun webapplication
+ 
+*/

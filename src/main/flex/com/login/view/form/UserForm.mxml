@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+         xmlns:component="com.login.view.component.*"
+		 title="User Form">
+	
+	<fx:Script>
+		<![CDATA[
+            import com.login.entity.AuthorityEntity;
+            import com.login.entity.UserEntity;
+            import com.login.event.AuthorityEvent;
+            import com.login.event.UserEvent;
+            
+            import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            
+			[Bindable]
+			[Inject( source="userController.selectedUser", bind="true" )]
+			public var selectedUser : UserEntity;
+                        			
+			[Bindable]
+			[Inject( source="authorityController.authorities", bind="true" )]
+			public var authorities:ArrayCollection;
+			      
+            [PostConstruct]
+            public function postConstruct():void {
+                var event : AuthorityEvent = new AuthorityEvent( AuthorityEvent.LIST_REQUESTED );
+                dispatchEvent( event );
+            } 
+			
+            public function formIsValid() : Boolean {
+                var valid:Boolean = true;
+                var message:String;
+                
+                if (username.text == "" || username.text.length < 2) {
+                    valid = false;
+                    message = "Name is required and at least 2 character!";
+                } else if (password.text == "" || password.text.length < 2) {
+                    valid = false;
+                    message = "Name is required and at least 2 character!";
+                } else if (rolesDropDown.selectedIndex == -1) {
+                    valid = false;
+                    message = "Role is required!";
+                }
+                
+                if (!valid) Alert.show(message, "User Form validation");
+                
+                return valid;
+            }
+            
+			/**
+			 * Handle the user hitting the save button. We capture the form data
+			 * and dispatch a standard Flex event. No Swiz-specific events or
+			 * special central dispatcher needed!
+			 */
+			private function createUser() : void
+			{
+                if (formIsValid()) {
+                    var newUser:UserEntity = new UserEntity;
+                    
+                    newUser.username = username.text;
+                    newUser.password = password.text;
+                    newUser.accountNonExpired = isAccountNonExpired.selected;
+                    newUser.accountNonLocked = isAccountNonLocked.selected;
+                    newUser.credentialsNonExpired = isCredentialsNonExpired.selected;
+                    newUser.enabled = isEnabled.selected;
+                    
+                    newUser.roles = new ArrayCollection;
+                    
+                    var auth:AuthorityEntity = rolesDropDown.selectedItem as AuthorityEntity;
+                    newUser.roles.addItem(auth);
+    								
+                    
+    				var event : UserEvent = new UserEvent( UserEvent.CREATE_REQUESTED );
+    				event.user = newUser;
+    				dispatchEvent( event );
+                }
+			}
+            
+            private function updateUser() : void
+            {	
+                if (formIsValid()) {
+                    selectedUser.username = username.text;
+                    selectedUser.password = password.text;
+                    selectedUser.accountNonExpired = isAccountNonExpired.selected;
+                    selectedUser.accountNonLocked = isAccountNonLocked.selected;
+                    selectedUser.credentialsNonExpired = isCredentialsNonExpired.selected;
+                    selectedUser.enabled = isEnabled.selected;
+                    
+                    selectedUser.roles = new ArrayCollection;
+                    
+                    var auth:AuthorityEntity = rolesDropDown.selectedItem as AuthorityEntity;
+                    selectedUser.roles.addItem(auth);
+                    
+                    var event : UserEvent = new UserEvent( UserEvent.UPDATE_REQUESTED );
+                    event.user = selectedUser;
+                    dispatchEvent( event );
+                }
+            }
+            
+            private function removeUser() : void
+            {				
+                var event : UserEvent = new UserEvent( UserEvent.REMOVE_REQUESTED );
+                event.user = selectedUser;
+                dispatchEvent( event );
+            }
+
+		]]>
+	</fx:Script>
+	
+	<mx:Form>
+		
+		<mx:FormItem id="usernameForm" label="Username">
+			<s:TextInput id="username" text="{selectedUser.username}" />
+		</mx:FormItem>
+		
+		<mx:FormItem id="passwordForm" label="Password">
+			<s:TextInput id="password" text="{selectedUser.password}" />
+		</mx:FormItem>
+				
+		<mx:FormItem id="isAccountNonExpiredForm" label="AccountNonExpired">
+			<s:CheckBox id="isAccountNonExpired" selected="{selectedUser.accountNonExpired}" />
+		</mx:FormItem>
+		
+		<mx:FormItem id="isAccountNonLockedForm" label="AccountNonLocked">
+			<s:CheckBox id="isAccountNonLocked" selected="{selectedUser.accountNonLocked}" />
+		</mx:FormItem>
+		
+		<mx:FormItem id="isCredentialsNonExpiredForm" label="CredentialsNonExpired">
+			<s:CheckBox id="isCredentialsNonExpired" selected="{selectedUser.credentialsNonExpired}" />
+		</mx:FormItem>
+		
+		<mx:FormItem id="isEnabledForm" label="Enabled">
+			<s:CheckBox id="isEnabled" selected="{selectedUser.enabled}" />
+		</mx:FormItem>
+		        
+		<mx:FormItem id="roleForm" label="Role">
+			<s:DropDownList id="rolesDropDown" width="150" prompt="Choose..." dataProvider="{authorities}" selectedItem="{authorities.length > 0 ? authorities.getItemAt(0) as AuthorityEntity : null}" labelField="description"/>
+		</mx:FormItem>
+		
+	</mx:Form>
+	
+	<s:controlBarContent>
+        <mx:Spacer width="100%" />
+        <s:Button id="updateButton" label="Update" click="updateUser()" visible="{selectedUser.id == -1 ? false : true}" />
+        <s:Button id="removeButton" label="Remove" click="removeUser()" visible="{selectedUser.id == -1 ? false : true}" />
+        <s:Button id="saveButton" label="Save as new" click="createUser()" />
+	</s:controlBarContent>
+	
+</s:Panel>
